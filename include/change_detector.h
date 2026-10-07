@@ -1,0 +1,8 @@
+//
+// Created by zappe on 29/09/2026.
+//
+
+#ifndef AUDIO_MIC_ONNX_CHANGE_DETECTOR_H
+#define AUDIO_MIC_ONNX_CHANGE_DETECTOR_H
+
+#endif //AUDIO_MIC_ONNX_CHANGE_DETECTOR_H
