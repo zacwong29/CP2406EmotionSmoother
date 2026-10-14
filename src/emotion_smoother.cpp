@@ -4,6 +4,12 @@
 #include "emotion_smoother.h"
 #include <iostream>
 #include <vector>
+#include <algorithm>
+#include <cmath>
+#include <stdexcept>
+#include <utility>
+
+#include "emotion_model.h"
 
 std::vector<float> EmotionSmoother::analyseWindows(std::vector<float> audio, int sampleRate, float windowSeconds, float overlapSeconds) {
     if (audio.empty()) {
@@ -35,4 +41,49 @@ std::vector<float> EmotionSmoother::analyseWindows(std::vector<float> audio, int
         throw std::invalid_argument(
             "Each window must contain at least 1,600 samples.");
     }
+
+    std::vector<float> windows;
+
+    EmotionModel model(
+    "model/model.onnx",
+    "model/labels.txt");
+
+    for (std::size_t start = 0;
+        start < audio.size();
+        start += stepSamples) {
+
+        const std::size_t end = std::min(
+            start + windowSamples,
+            audio.size());
+
+        if (end - start < 1600) {
+            break;
+        }
+
+        std::vector<float> segment(
+            audio.begin() + static_cast<std::ptrdiff_t>(start),
+            audio.begin() + static_cast<std::ptrdiff_t>(end));
+
+        auto predictions = model.predict(std::move(segment));
+
+        if (predictions.size() < 2) {
+            throw std::runtime_error(
+                "The model must return at least two emotion classes.");
+        }
+
+        const float startTime = static_cast<float>(start) / sampleRate;
+        const float endTime = static_cast<float>(end) / sampleRate;
+
+        windows.push_back(startTime);
+        windows.push_back(endTime);
+        windows.push_back(predictions[0].probability);
+        windows.push_back(predictions[1].probability);
+
+
+        if (end == audio.size()) {
+            break;
+        }
+    }
+
+    return windows;
 }
