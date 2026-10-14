@@ -26,7 +26,7 @@ std::vector<windowPrediction> EmotionSmoother::analyseWindows(std::vector<float>
 
     if (overlapSeconds < 0.0F || overlapSeconds >= windowSeconds) {
         throw std::invalid_argument(
-            "Overlap must be at least zero and smaller than the window length.");
+            "Overlap must be smaller than the window length.");
     }
 
     const auto windowSamples = static_cast<std::size_t>(
