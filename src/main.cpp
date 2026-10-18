@@ -24,6 +24,7 @@
 
 #include "audio_recorder.h"
 #include "emotion_model.h"
+#include "emotion_smoother.h"
 #include <onnxruntime_cxx_api.h>
 #include <iomanip>
 #include <iostream>
@@ -147,6 +148,19 @@ int main()
 
         auto predictions =
             model.predict(audio);
+
+        EmotionSmoother smoother;
+
+        auto windows = smoother.analyseWindows(
+            audio,
+            AudioRecorder::sampleRate,
+            1.0f,
+            0.5f
+        );
+
+        std::cout << "\nWindow count: "
+                  << windows.size()
+                  << "\n";
 
         std::cout
             << "\n=====================================\n"

@@ -42,6 +42,16 @@ std::vector<windowPrediction> EmotionSmoother::analyseWindows(std::vector<float>
 
     const auto stepSamples = windowSamples - overlapSamples;
 
+    std::cout << "\n=== WINDOW SETTINGS TEST ===\n";
+    std::cout << "Window samples: "
+              << windowSamples << '\n';
+
+    std::cout << "Overlap samples: "
+              << overlapSamples << '\n';
+
+    std::cout << "Step samples: "
+              << stepSamples << '\n';
+
     if (windowSamples < 1600) {
         throw std::invalid_argument(
             "Each window must contain at least 1,600 samples.");
@@ -61,6 +71,11 @@ std::vector<windowPrediction> EmotionSmoother::analyseWindows(std::vector<float>
             start + windowSamples,
             audio.size());
 
+        std::cout
+    << "Start = " << start
+    << ", End = " << end
+    << '\n';
+
         if (end - start < 1600) {
             break;
         }
@@ -69,7 +84,19 @@ std::vector<windowPrediction> EmotionSmoother::analyseWindows(std::vector<float>
             audio.begin() + static_cast<std::ptrdiff_t>(start),
             audio.begin() + static_cast<std::ptrdiff_t>(end));
 
+        std::cout
+            << "Segment size = "
+            << segment.size()
+            << '\n';
+
         auto predictions = model.predict(std::move(segment));
+
+        std::cout
+            << "Top emotion = "
+            << predictions[0].label
+            << " ("
+            << predictions[0].probability
+            << ")\n";
 
         if (predictions.size() < 2) {
             throw std::runtime_error(
@@ -87,11 +114,23 @@ std::vector<windowPrediction> EmotionSmoother::analyseWindows(std::vector<float>
 
         windows.push_back(std::move(result));
 
+        std::cout
+            << "Stored window: "
+            << result.startTime
+            << "s - "
+            << result.endTime
+            << "s\n";
+
 
         if (end == audio.size()) {
             break;
         }
     }
+
+    std::cout
+        << "Total windows analysed: "
+        << windows.size()
+        << '\n';
 
     return windows;
 }
