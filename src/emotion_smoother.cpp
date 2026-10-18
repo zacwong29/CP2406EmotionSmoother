@@ -134,3 +134,48 @@ std::vector<windowPrediction> EmotionSmoother::analyseWindows(std::vector<float>
 
     return windows;
 }
+
+
+smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) {
+    if (windows.empty()) {
+        throw std::invalid_argument("Window cannot be empty.");
+    }
+
+    std::map<std::string, float> emotionScores;
+
+    // Accumulate scores
+    for (const auto& window : windows) {
+        float topScore = window.firstStrongestProbability * 2.0f;
+        float secondScore = window.secondStrongestProbability;
+
+        emotionScores[window.firstStrongestEmotion] += topScore;
+        emotionScores[window.secondStrongestEmotion] += secondScore;
+    }
+
+    // Find the winning emotion
+    std:: string winningEmotion;
+    float winningScore = 0.0f;
+
+    for (const auto& [emotion, score] : emotionScores) {
+        if (score > winningScore) {  // if scores are equal, the alphabetically first emotion
+                                     // is selected due to how maps work in C++ (key order).
+            winningScore = score;
+            winningEmotion = emotion;
+        }
+    }
+
+    // Calculate total score
+    float totalScore = 0.0f;
+
+    for (const auto& [emotion, score] : emotionScores) {
+        totalScore += score;
+    }
+
+    float confidence = winningScore / totalScore;
+
+    return {
+        winningEmotion,
+        confidence,
+        emotionScores
+    };
+}
