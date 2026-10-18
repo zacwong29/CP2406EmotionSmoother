@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 #ifndef AUDIO_MIC_ONNX_EMOTION_SMOOTHER_H
@@ -19,9 +20,16 @@ struct windowPrediction {
     float secondStrongestProbability;
 };
 
+struct smoothedEmotion {
+    std::string winningEmotion;
+    float confidence;
+    std::map<std::string, float> scoreInformation;
+};
+
 class EmotionSmoother {
 public:
     std::vector<windowPrediction> analyseWindows(std::vector<float> audio, int sampleRate, float windowSeconds, float overlapSeconds);
+    smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows);
 };
 
 #endif //AUDIO_MIC_ONNX_EMOTION_SMOOTHER_H
