@@ -137,19 +137,30 @@ std::vector<windowPrediction> EmotionSmoother::analyseWindows(std::vector<float>
 
 
 smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) {
+    const float TOP_WEIGHT = 2.0f;  // Constants for clean code.
+    const float SECOND_WEIGHT = 1.0f;
+
+    if (TOP_WEIGHT <= SECOND_WEIGHT) {
+        throw std::logic_error(
+            "Top weight must be greater than second weight.");
+    }
+
     if (windows.empty()) {
         throw std::invalid_argument("Window cannot be empty.");
     }
 
     std::map<std::string, float> emotionScores;
+    std::map<std::string, float> topOnlyScores;
 
     // Accumulate scores
     for (const auto& window : windows) {
-        float topScore = window.firstStrongestProbability * 2.0f;
-        float secondScore = window.secondStrongestProbability;
+        float topScore = window.firstStrongestProbability * TOP_WEIGHT;
+        float secondScore = window.secondStrongestProbability * SECOND_WEIGHT;
 
         emotionScores[window.firstStrongestEmotion] += topScore;
         emotionScores[window.secondStrongestEmotion] += secondScore;
+
+        topOnlyScores[window.firstStrongestEmotion] += topScore;
     }
 
     // Find the winning emotion
