@@ -172,6 +172,11 @@ smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) 
         topOnlyScores[window.firstStrongestEmotion] += topScore;
     }
 
+    if (emotionScores.empty()) {
+        throw std::runtime_error(
+            "emotionScores mapping is empty.");
+    }
+
     // Find the winning emotion
     std:: string winningEmotion;
     float winningScore = 0.0f;
@@ -189,6 +194,11 @@ smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) 
 
     for (const auto& [emotion, score] : emotionScores) {
         totalScore += score;
+    }
+
+    if (totalScore <= 0.0f) {
+        throw std::runtime_error(
+            "Total score must be positive.");
     }
 
     float confidence = winningScore / totalScore;
