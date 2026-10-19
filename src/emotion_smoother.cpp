@@ -154,6 +154,15 @@ smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) 
 
     // Accumulate scores
     for (const auto& window : windows) {
+        if (window.firstStrongestProbability < 0.0f ||
+            window.firstStrongestProbability > 1.0f ||
+            window.secondStrongestProbability < 0.0f ||
+            window.secondStrongestProbability > 1.0f) {
+
+            throw std::invalid_argument(
+                "Probability must be between 0 and 1.");
+        }
+
         float topScore = window.firstStrongestProbability * TOP_WEIGHT;
         float secondScore = window.secondStrongestProbability * SECOND_WEIGHT;
 
