@@ -177,6 +177,28 @@ smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) 
             "emotionScores mapping is empty.");
     }
 
+    const float EPSILON = 1e-5f;
+
+    auto compareEmotions = [&](const auto& left, const auto& right) {
+        // Rule 1: Prefer larger accumulated score
+        if (std::fabs(left.second - right.second) > EPSILON) {
+            return left.second < right.second;
+        }
+
+        // Rule 2: Compare top-only scores
+        float leftTop = topOnlyScores[left.first];
+        float rightTop = topOnlyScores[right.first];
+
+        if (std::fabs(leftTop - rightTop) > EPSILON) {
+            return leftTop < rightTop;
+        }
+
+        // Rule 3: Alphabetical tie-break
+        return left.first > right.first;
+    };
+
+
+
     // Find the winning emotion
     std:: string winningEmotion;
     float winningScore = 0.0f;
