@@ -200,9 +200,15 @@ smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) 
     std::pair<std::string, float> testA {"sad", 3.0f};
     std::pair<std::string, float> testB {"angry", 5.0f};
 
-    std::cout << "Comparator test: "
-              << compareEmotions(testA, testB)
-              << "\n";
+    std::cout << "Comparator test: " << compareEmotions(testA, testB) << "\n";
+
+    topOnlyScores["happy"] = 5.0f;
+    topOnlyScores["angry"] = 5.0f;
+
+    std::pair<std::string, float> tieA {"happy", 5.0f};
+    std::pair<std::string, float> tieB {"angry", 5.0f};
+
+    std::cout << "Tie test: " << compareEmotions(tieA, tieB) << '\n';
 
     // Find the winning emotion
     auto winner = std::max_element(
