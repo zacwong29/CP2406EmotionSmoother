@@ -197,19 +197,21 @@ smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) 
         return left.first > right.first;
     };
 
+    std::pair<std::string, float> testA {"sad", 3.0f};
+    std::pair<std::string, float> testB {"angry", 5.0f};
 
+    std::cout << "Comparator test: "
+              << compareEmotions(testA, testB)
+              << "\n";
 
     // Find the winning emotion
-    std:: string winningEmotion;
-    float winningScore = 0.0f;
+    auto winner = std::max_element(
+        emotionScores.begin(),
+        emotionScores.end(),
+        compareEmotions);
 
-    for (const auto& [emotion, score] : emotionScores) {
-        if (score > winningScore) {  // if scores are equal, the alphabetically first emotion
-                                     // is selected due to how maps work in C++ (key order).
-            winningScore = score;
-            winningEmotion = emotion;
-        }
-    }
+    std::string winningEmotion = winner->first;
+    float winningScore = winner->second;
 
     // Calculate total score
     float totalScore = 0.0f;
