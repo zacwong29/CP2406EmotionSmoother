@@ -158,6 +158,16 @@ int main()
             0.5f
         );
 
+        for (const auto& window : windows) {
+            std::cout << std::fixed << std::setprecision(1)
+                      << window.startTime << "-"
+                      << window.endTime << " s: "
+                      << window.firstStrongestEmotion << " "
+                      << window.firstStrongestProbability * 100.0F << "% | "
+                      << window.secondStrongestEmotion << " "
+                      << window.secondStrongestProbability * 100.0F << "%\n";
+        }
+
         std::cout << "\nWindow count: "
                   << windows.size()
                   << "\n";
