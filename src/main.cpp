@@ -37,81 +37,85 @@ int main()
 {
 
 
-    try
-    {
-        std::cout
-            << "=====================================\n"
-            << " Speech Emotion Recognition\n"
-            << "=====================================\n\n"
-            << "1. Record from microphone\n"
-            << "2. Load WAV file\n"
-            << "3. List microphone devices\n"
-            << "4. Quit\n\n"
-            << "Choice: ";
-
-        int choice;
-        AudioRecorder recorder;
-        std::cin >> choice;
-        std::cin.ignore();
-
-        if (choice == 4)
-        {
-            return 0;
-        }
-
-        if (choice == 3)
-        {
-            AudioRecorder::printInputDevices();
-            return 0;
-        }
-
-        std::vector<float> audio;
-
-        if (choice == 1)
-        {
-            float seconds;
-
+    try {
+        int choice = 0;
+        while (choice != 4) {
             std::cout
-                << "\nRecording duration (seconds): ";
+                << "=====================================\n"
+                << " Speech Emotion Recognition\n"
+                << "=====================================\n\n"
+                << "1. Record from microphone\n"
+                << "2. Load WAV file\n"
+                << "3. List microphone devices\n"
+                << "4. Quit\n\n"
+                << "Choice: ";
 
-            std::cin >> seconds;
+            if (!(std::cin >> choice)) {
+                std::cout << "Please enter a number from 1 to 4.\n";
+                continue;
+            }
+
+            AudioRecorder recorder;
             std::cin.ignore();
 
-            std::cout
-                << "\nPress ENTER and start speaking...\n";
+            if (choice == 4)
+            {
+                break;
+            }
 
-            std::cin.get();
+            if (choice == 3)
+            {
+                AudioRecorder::printInputDevices();
+                continue;
+            }
 
-            audio = recorder.record(seconds);
+            std::vector<float> audio;
 
-            AudioRecorder::saveWav(
-                "last_recording.wav",
-                audio);
+            if (choice == 1)
+            {
+                float seconds;
 
+                std::cout
+                    << "\nRecording duration (seconds): ";
 
-            std::cout
-                << "\nSaved recording to:\n"
-                << "last_recording.wav\n\n";
-        }
-        else if (choice == 2)
-        {
-            std::string wavFile;
+                std::cin >> seconds;
+                std::cin.ignore();
 
-            std::cout
-                << "\nEnter WAV filename:\n";
+                std::cout
+                    << "\nPress ENTER and start speaking...\n";
 
-            std::getline(
-                std::cin,
-                wavFile);
+                std::cin.get();
 
-            int sampleRate;
+                audio = recorder.record(seconds);
 
-            audio = recorder.loadWaveFile(
-                wavFile,
-                sampleRate);
+                AudioRecorder::saveWav(
+                    "last_recording.wav",
+                    audio);
 
 
-            if (sampleRate != AudioRecorder::sampleRate)
+                std::cout
+                    << "\nSaved recording to:\n"
+                    << "last_recording.wav\n\n";
+            }
+            else if (choice == 2)
+            {
+                std::string wavFile;
+
+                std::cout
+                    << "\nEnter WAV filename:\n";
+
+                std::getline(
+                    std::cin,
+                    wavFile);
+
+                int sampleRate;
+
+                audio = recorder.loadWaveFile(
+                    wavFile,
+                    sampleRate);
+
+
+                if (sampleRate != AudioRecorder::sampleRate)
                 {
                     std::cout
                         << "Converting "
@@ -128,92 +132,93 @@ int main()
                         "temp_16k.wav",
                         sampleRate);
                 }
-                    
+
+                std::cout
+                    << "\nLoaded: "
+                    << wavFile
+                    << "\n";
+            }
+            else
+            {
+                std::cout
+                    << "Invalid option.\n";
+
+                continue;
+            }
+
+            EmotionModel model(
+                "model/model.onnx",
+                "model/labels.txt");
+
+            auto predictions =
+                model.predict(audio);
+
+            EmotionSmoother smoother;
+
+            auto windows = smoother.analyseWindows(
+                audio,
+                AudioRecorder::sampleRate,
+                1.0f,
+                0.5f
+            );
+
+            for (const auto& window : windows) {
+                std::cout << std::fixed << std::setprecision(1)
+                          << window.startTime << "-"
+                          << window.endTime << " s: "
+                          << window.firstStrongestEmotion << " "
+                          << window.firstStrongestProbability * 100.0F << "% | "
+                          << window.secondStrongestEmotion << " "
+                          << window.secondStrongestProbability * 100.0F << "%\n";
+            }
+
+            std::cout << "\nWindow count: "
+                      << windows.size()
+                      << "\n";
+
             std::cout
-                << "\nLoaded: "
-                << wavFile
+                << "\n=====================================\n"
+                << " Emotion Probabilities\n"
+                << "=====================================\n\n";
+
+            for (const auto& prediction : predictions)
+            {
+                std::cout
+                    << std::setw(12)
+                    << prediction.label
+                    << " : "
+                    << std::fixed
+                    << std::setprecision(2)
+                    << prediction.probability * 100.0f
+                    << "%\n";
+            }
+
+            std::cout
+                << "\n=====================================\n"
+                << " Predicted Emotion\n"
+                << "=====================================\n\n"
+                << predictions.front().label
                 << "\n";
+
         }
-        else
+        }
+        catch (const Ort::Exception& e)
         {
-            std::cout
-                << "Invalid option.\n";
+            std::cerr
+                << "\nONNX Runtime Error:\n"
+                << e.what()
+                << "\n";
 
             return 1;
         }
-
-        EmotionModel model(
-            "model/model.onnx",
-            "model/labels.txt");
-
-        auto predictions =
-            model.predict(audio);
-
-        EmotionSmoother smoother;
-
-        auto windows = smoother.analyseWindows(
-            audio,
-            AudioRecorder::sampleRate,
-            1.0f,
-            0.5f
-        );
-
-        for (const auto& window : windows) {
-            std::cout << std::fixed << std::setprecision(1)
-                      << window.startTime << "-"
-                      << window.endTime << " s: "
-                      << window.firstStrongestEmotion << " "
-                      << window.firstStrongestProbability * 100.0F << "% | "
-                      << window.secondStrongestEmotion << " "
-                      << window.secondStrongestProbability * 100.0F << "%\n";
-        }
-
-        std::cout << "\nWindow count: "
-                  << windows.size()
-                  << "\n";
-
-        std::cout
-            << "\n=====================================\n"
-            << " Emotion Probabilities\n"
-            << "=====================================\n\n";
-
-        for (const auto& prediction : predictions)
+        catch (const std::exception& e)
         {
-            std::cout
-                << std::setw(12)
-                << prediction.label
-                << " : "
-                << std::fixed
-                << std::setprecision(2)
-                << prediction.probability * 100.0f
-                << "%\n";
+            std::cerr
+                << "\nError:\n"
+                << e.what()
+                << "\n";
+
+            return 1;
         }
-
-        std::cout
-            << "\n=====================================\n"
-            << " Predicted Emotion\n"
-            << "=====================================\n\n"
-            << predictions.front().label
-            << "\n";
-
-        return 0;
-    }
-    catch (const Ort::Exception& e)
-    {
-        std::cerr
-            << "\nONNX Runtime Error:\n"
-            << e.what()
-            << "\n";
-
-        return 1;
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr
-            << "\nError:\n"
-            << e.what()
-            << "\n";
-
-        return 1;
-    }
+    return 0;
 }
