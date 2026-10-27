@@ -51,6 +51,8 @@ int main()
                 << "Choice: ";
 
             if (!(std::cin >> choice)) {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 std::cout << "Please enter a number from 1 to 4.\n";
                 continue;
             }
