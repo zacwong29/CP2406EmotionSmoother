@@ -28,6 +28,7 @@
 #include <onnxruntime_cxx_api.h>
 #include <iomanip>
 #include <iostream>
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -72,6 +73,7 @@ int main()
             }
 
             std::vector<float> audio;
+            bool convertedFileCreated = false;
 
             if (choice == 1)
             {
@@ -124,15 +126,32 @@ int main()
                         << sampleRate
                         << " Hz audio to 16000 Hz...\n";
 
+                    const std::string tempFile = "temp_16k.wav";
+
                     std::string command =
                         "ffmpeg -y -i \"" + wavFile +
-                        "\" -ar 16000 -ac 1 temp_16k.wav";
+                        "\" -ar 16000 -ac 1 \"" + tempFile + "\"";
 
-                    std::system(command.c_str());
+                    int result = std::system(command.c_str());
+
+                    if (result != 0) {
+                        throw std::runtime_error(
+                            "Audio conversion failed. "
+                            "Ensure FFmpeg is installed and the WAV file is valid."
+                        );
+                    }
 
                     audio = recorder.loadWaveFile(
-                        "temp_16k.wav",
+                        tempFile,
                         sampleRate);
+
+                    if (sampleRate != AudioRecorder::sampleRate) {
+                        throw std::runtime_error(
+                            "Converted audio is not 16000 Hz."
+                        );
+                    }
+
+                    convertedFileCreated = true;
                 }
 
                 std::cout
@@ -201,6 +220,10 @@ int main()
                 << "=====================================\n\n"
                 << predictions.front().label
                 << "\n";
+
+            if (convertedFileCreated) {
+                std::remove("temp_16k.wav");
+            }
 
         }
         }
