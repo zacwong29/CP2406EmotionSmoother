@@ -136,7 +136,7 @@ std::vector<windowPrediction> EmotionSmoother::analyseWindows(std::vector<float>
 }
 
 
-smoothedEmotion smoothPredictions(const std::vector<windowPrediction>& windows) {
+smoothedEmotion EmotionSmoother::smoothPredictions(const std::vector<windowPrediction>& windows) {
     const float TOP_WEIGHT = 2.0f;  // Constants for clean code.
     const float SECOND_WEIGHT = 1.0f;
 
