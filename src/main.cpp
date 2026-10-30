@@ -29,13 +29,147 @@
 #include <iomanip>
 #include <iostream>
 #include <cstdio>
+#include <limits>
 #include <string>
 #include <vector>
+
+void testSmoothPredictions() {
+    std::vector<windowPrediction> testWindows = {
+        {
+            0.0f, 1.0f,
+            "calm", 0.70f,
+            "happy", 0.20f
+        },
+        {
+            1.0f, 2.0f,
+            "calm", 0.65f,
+            "sad", 0.25f
+        },
+        {
+        2.0f, 3.0f,
+            "calm", 0.55f,
+            "happy", 0.35f
+        }
+    };
+
+    EmotionSmoother smoother;
+
+    auto result = smoother.smoothPredictions(testWindows);
+
+    std::cout << "\n=== MANUAL SMOOTHER TEST ===\n";
+    std::cout << "Winner: "
+              << result.winningEmotion
+              << '\n';
+
+    std::cout << "Confidence: "
+              << result.confidence
+              << '\n';
+}
+
+void testEmptyInput()
+{
+    std::vector<windowPrediction> windows;
+
+    EmotionSmoother smoother;
+
+    try
+    {
+        auto result = smoother.smoothPredictions(windows);
+
+        std::cout << "ERROR: exception expected\n";
+    }
+    catch (const std::exception&)
+    {
+        std::cout << "Empty-input test passed\n";
+    }
+}
+
+void testSingleWindow()
+{
+    std::vector<windowPrediction> windows = {
+        {
+            0.0f, 1.0f,
+            "happy", 0.8f,
+            "sad", 0.2f
+        }
+    };
+
+    EmotionSmoother smoother;
+
+    auto result = smoother.smoothPredictions(windows);
+
+    std::cout
+        << "Single window winner = "
+        << result.winningEmotion
+        << '\n';
+}
+
+void testRepeatedTopEmotion()
+{
+    std::vector<windowPrediction> windows = {
+        {
+            0.0f, 1.0f,
+            "happy", 0.8f,
+            "sad", 0.2f
+        },
+        {
+            1.0f, 2.0f,
+            "happy", 0.7f,
+            "angry", 0.3f
+        },
+        {
+            2.0f, 3.0f,
+            "happy", 0.9f,
+            "calm", 0.1f
+        }
+    };
+
+    EmotionSmoother smoother;
+
+    auto result = smoother.smoothPredictions(windows);
+
+    std::cout
+        << "Repeated-top winner = "
+        << result.winningEmotion
+        << '\n';
+}
+
+void testTieBreak()
+{
+    std::vector<windowPrediction> windows = {
+        {
+            0.0f, 1.0f,
+            "angry", 1.0f,
+            "happy", 1.0f
+        },
+        {
+            1.0f, 2.0f,
+            "happy", 1.0f,
+            "angry", 1.0f
+        }
+    };
+
+    EmotionSmoother smoother;
+
+    auto result = smoother.smoothPredictions(windows);
+
+    std::cout
+        << "Tie-break winner = "
+        << result.winningEmotion
+        << '\n';
+}
+
 
 // TODO (Task 3): Convert the one-run menu flow into a loop so another
 // recording or WAV file can be analysed without restarting.
 int main()
 {
+
+    testSmoothPredictions();
+    testEmptyInput();
+    testSingleWindow();
+    testRepeatedTopEmotion();
+    testTieBreak();
 
 
     try {
